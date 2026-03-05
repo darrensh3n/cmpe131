@@ -1,8 +1,13 @@
-# Welcome to your Expo app 👋
+# Spartan Marketplace
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Monorepo with a **frontend** (Expo/React Native) app and a **backend** (FastAPI) API.
 
-## Get started
+- **`frontend/`** — Expo app (screens in `frontend/app/`, components, hooks, assets)
+- **`backend/`** — FastAPI server ([backend README](backend/README.md))
+
+## Loading the app (frontend)
+
+From the **project root**:
 
 1. Install dependencies
 
@@ -10,30 +15,45 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Start the Expo dev server
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+   Or with tunnel: `npx expo start --tunnel`
+
+In the output you can open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Expo Go](https://expo.dev/go)
+- Web browser
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Edit the app in **`frontend/app/`** (and **`frontend/components/`**, **`frontend/hooks/`**, etc.). The project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Running the backend
 
-When you're ready, run:
+See [backend/README.md](backend/README.md). From the project root:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+API: http://localhost:8000 · Docs: http://localhost:8000/docs
+
+## Get a fresh frontend
+
+To reset the frontend to a blank app (starter code moved to `frontend/app-example`):
 
 ```bash
 npm run reset-project
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
 ## Learn more
 
