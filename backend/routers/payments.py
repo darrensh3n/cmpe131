@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from config import settings
-from services import stripe_service
+from services import payments_service
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -22,7 +22,7 @@ class CreateCheckoutSessionRequest(BaseModel):
 @router.post("/create-checkout-session")
 def create_checkout_session(body: CreateCheckoutSessionRequest):
     try:
-        session = stripe_service.create_checkout_session(
+        session = payments_service.create_checkout_session(
             amount_cents=body.amount_cents,
             currency=body.currency,
             success_url=body.success_url,
