@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from routers.listings import router as listings_router
+from routers.payments import router as payments_router, webhook_router
+
 app = FastAPI(
     title="Spartan Marketplace API",
     description="Backend API for Spartan Marketplace",
@@ -14,6 +17,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(listings_router)
+app.include_router(payments_router)
+app.include_router(webhook_router)
 
 
 @app.get("/")
