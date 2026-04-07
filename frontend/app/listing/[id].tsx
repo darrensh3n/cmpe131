@@ -1,9 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
+  FlatList,
   Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -23,6 +28,9 @@ import { getOrCreateConversation } from '@/services/messages';
 import { useAuth } from '@/context/auth';
 import { useWishlist } from '@/context/wishlist';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IMAGE_HEIGHT = 280;
+
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function ListingDetailScreen() {
@@ -31,6 +39,7 @@ export default function ListingDetailScreen() {
   const { isSaved, toggleSave } = useWishlist();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Button press animation
   const btnScale = useSharedValue(1);
@@ -46,6 +55,11 @@ export default function ListingDetailScreen() {
       });
     }
   }, [id]);
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    setActiveIndex(index);
+  };
 
   if (loading) {
     return (
@@ -77,9 +91,11 @@ export default function ListingDetailScreen() {
     year: 'numeric',
   });
 
+  const images = listing.imageUrls ?? [];
+
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Back button overlaid on image */}
+      {/* Back + heart buttons overlaid on slideshow */}
       <View style={styles.imageControls}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -106,12 +122,46 @@ export default function ListingDetailScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Listing image */}
-        <Image
-          source={{ uri: listing.imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        {/* Image slideshow */}
+        <View style={styles.slideshowContainer}>
+          <FlatList
+            data={images}
+            keyExtractor={(_, i) => String(i)}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            renderItem={({ item }) => (
+              <View style={styles.slide}>
+                <Image
+                  source={{ uri: item }}
+                  style={styles.slideImage}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={['transparent', 'rgba(10,22,40,0.40)']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.slideOverlay}
+                  pointerEvents="none"
+                />
+              </View>
+            )}
+          />
+
+          {/* Dot indicators — only show when more than 1 image */}
+          {images.length > 1 && (
+            <View style={styles.dotsRow}>
+              {images.map((_, i) => (
+                <View
+                  key={i}
+                  style={[styles.dot, i === activeIndex ? styles.dotActive : styles.dotInactive]}
+                />
+              ))}
+            </View>
+          )}
+        </View>
 
         {/* Content card */}
         <View style={styles.contentCard}>
@@ -173,7 +223,7 @@ export default function ListingDetailScreen() {
               listing.sellerEmail,
               listing.sellerName,
               listing.title,
-              listing.imageUrl
+              listing.imageUrls[0] ?? ''
             );
             router.push(`/conversation/${convo.id}`);
           }}
@@ -214,10 +264,48 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: Spacing.xl,
   },
-  image: {
-    width: '100%',
-    height: 280,
+  slideshowContainer: {
+    width: SCREEN_WIDTH,
+    height: IMAGE_HEIGHT,
     backgroundColor: Colors.border,
+  },
+  slide: {
+    width: SCREEN_WIDTH,
+    height: IMAGE_HEIGHT,
+  },
+  slideImage: {
+    width: SCREEN_WIDTH,
+    height: IMAGE_HEIGHT,
+  },
+  slideOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 100,
+  },
+  dotsRow: {
+    position: 'absolute',
+    bottom: Spacing.sm,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dot: {
+    borderRadius: Radius.full,
+  },
+  dotActive: {
+    width: 20,
+    height: 6,
+    backgroundColor: Colors.white,
+  },
+  dotInactive: {
+    width: 6,
+    height: 6,
+    backgroundColor: Colors.whiteAlpha60,
   },
   contentCard: {
     backgroundColor: Colors.white,

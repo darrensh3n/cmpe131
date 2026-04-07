@@ -21,7 +21,7 @@ export function ListingCard({ listing, onPress, saved = false, onToggleSave }: P
     >
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: listing.imageUrl }}
+          source={{ uri: listing.imageUrls[0] }}
           style={styles.image}
           resizeMode="cover"
         />

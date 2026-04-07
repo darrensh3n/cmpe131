@@ -4,12 +4,13 @@ import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 
 type Route = {
   key: string;
@@ -29,6 +30,7 @@ type Props = {
 const ICONS: Record<string, { active: string; inactive: string }> = {
   index: { active: 'storefront', inactive: 'storefront-outline' },
   messages: { active: 'chatbubble', inactive: 'chatbubble-outline' },
+  sell: { active: 'pricetag', inactive: 'pricetag-outline' },
   wishlist: { active: 'heart', inactive: 'heart-outline' },
 };
 
@@ -74,37 +76,34 @@ type TabItemProps = {
 };
 
 function TabItem({ label, iconActive, iconInactive, focused, onPress }: TabItemProps) {
-  const pillOpacity = useSharedValue(focused ? 1 : 0);
-  const pillScale = useSharedValue(focused ? 1 : 0.8);
+  const indicatorOpacity = useSharedValue(focused ? 1 : 0);
 
   useEffect(() => {
-    pillOpacity.value = withSpring(focused ? 1 : 0, { damping: 18, stiffness: 280 });
-    pillScale.value = withSpring(focused ? 1 : 0.8, { damping: 16, stiffness: 260 });
+    if (focused) {
+      indicatorOpacity.value = withSpring(1, { damping: 18, stiffness: 280 });
+    } else {
+      cancelAnimation(indicatorOpacity);
+      indicatorOpacity.value = 0;
+    }
   }, [focused]);
 
-  const pillStyle = useAnimatedStyle(() => ({
-    opacity: pillOpacity.value,
-    transform: [{ scale: pillScale.value }],
+  const indicatorStyle = useAnimatedStyle(() => ({
+    opacity: indicatorOpacity.value,
   }));
 
   return (
     <TouchableOpacity style={styles.tabItem} onPress={onPress} activeOpacity={0.8}>
-      {/* Pill wraps icon + label together */}
-      <View style={styles.pillContent}>
-        {/* Glass pill fills the content wrapper */}
-        <Animated.View style={[styles.pillWrapper, pillStyle]}>
-          <BlurView intensity={80} tint="light" style={styles.pill} />
-        </Animated.View>
+      {/* Thin blue line at the top of the tab bar for the active tab */}
+      <Animated.View style={[styles.indicator, indicatorStyle]} />
 
-        <Ionicons
-          name={focused ? iconActive : iconInactive}
-          size={26}
-          color={focused ? Colors.blue : Colors.textMuted}
-        />
-        <Text style={[styles.label, focused && styles.labelActive]}>
-          {label}
-        </Text>
-      </View>
+      <Ionicons
+        name={focused ? iconActive : iconInactive}
+        size={24}
+        color={focused ? Colors.blue : Colors.textMuted}
+      />
+      <Text style={[styles.label, focused && styles.labelActive]} numberOfLines={1}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
   tabBar: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    // Layered shadow for depth
     shadowColor: Colors.blue,
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.08,
@@ -131,35 +129,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.xs,
-  },
-  pillContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
     position: 'relative',
   },
-  pillWrapper: {
-    // Fills the pillContent container exactly
+  indicator: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    // Layered shadow for glass depth
-    shadowColor: Colors.blue,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  pill: {
-    flex: 1,
-    backgroundColor: Colors.glassBlue,
+    top: -Spacing.sm,   // sits flush against the top border of the tab bar
+    left: Spacing.sm,
+    right: Spacing.sm,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: Colors.blue,
   },
   label: {
     fontSize: 10,
