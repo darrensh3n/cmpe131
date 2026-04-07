@@ -42,6 +42,9 @@ app-example
 /ios
 /android
 
+# Claude
+claude.md
+
 # Python / backend
 backend/.venv/
 backend/venv/
