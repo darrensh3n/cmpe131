@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers.listings import router as listings_router
 from routers.payments import router as payments_router, webhook_router
+from routers.orders import router as orders_router
+
 
 app = FastAPI(
     title="Spartan Marketplace API",
@@ -21,6 +23,7 @@ app.add_middleware(
 app.include_router(listings_router)
 app.include_router(payments_router)
 app.include_router(webhook_router)
+app.include_router(orders_router)
 
 
 @app.get("/")
