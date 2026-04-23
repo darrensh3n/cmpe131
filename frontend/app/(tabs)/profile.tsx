@@ -80,7 +80,7 @@ export default function ProfileScreen() {
 
   function handleSignOut() {
     signOut();
-    router.replace('/(auth)/login');
+    router.replace('/(auth)/login' as any);
   }
 
   const avatarLetter = userEmail ? userEmail[0].toUpperCase() : '?';

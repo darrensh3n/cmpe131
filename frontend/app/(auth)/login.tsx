@@ -31,7 +31,7 @@ export default function LoginScreen() {
     if (userEmail) {
       router.replace("/(tabs)");
     }
-  }, [userEmail]);
+  }, [router, userEmail]);
 
   const buttonScale = useSharedValue(1);
   const buttonOpacity = useSharedValue(1);

@@ -86,7 +86,7 @@ function TabItem({ label, iconActive, iconInactive, focused, onPress }: TabItemP
       cancelAnimation(indicatorOpacity);
       indicatorOpacity.value = 0;
     }
-  }, [focused]);
+  }, [focused, indicatorOpacity]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
     opacity: indicatorOpacity.value,

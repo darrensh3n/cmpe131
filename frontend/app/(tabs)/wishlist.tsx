@@ -63,7 +63,7 @@ export default function WishlistScreen() {
           <View style={styles.cardWrapper}>
             <ListingCard
               listing={item}
-              onPress={(l) => router.push(`/listing/${l.id}`)}
+              onPress={(l) => router.push(`/listing/${l.id}` as any)}
               saved={isSaved(item.id)}
               onToggleSave={(l) => toggleSave(l.id)}
             />

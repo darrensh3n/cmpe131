@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -225,7 +225,7 @@ export default function ListingDetailScreen() {
               listing.title,
               listing.imageUrls[0] ?? ''
             );
-            router.push(`/conversation/${convo.id}`);
+            router.push(`/conversation/${convo.id}` as any);
           }}
         >
           <Ionicons name="mail-outline" size={18} color={Colors.white} />

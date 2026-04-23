@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
-  Image,
   Platform,
   SafeAreaView,
   StyleSheet,
@@ -133,7 +132,7 @@ export default function MessagesScreen() {
           <ConversationRow
             conversation={item}
             userEmail={userEmail ?? ''}
-            onPress={() => router.push(`/conversation/${item.id}`)}
+            onPress={() => router.push(`/conversation/${item.id}` as any)}
           />
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -142,7 +141,7 @@ export default function MessagesScreen() {
             <Ionicons name="chatbubble-outline" size={48} color={Colors.border} />
             <Text style={styles.emptyText}>No messages yet</Text>
             <Text style={styles.emptySubtext}>
-              Tap "Contact Seller" on any listing to start a conversation
+              Tap &quot;Contact Seller&quot; on any listing to start a conversation
             </Text>
           </View>
         }

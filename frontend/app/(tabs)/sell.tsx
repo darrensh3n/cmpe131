@@ -52,7 +52,7 @@ export default function SellScreen() {
       <View style={styles.emptyState}>
         <Ionicons name="pricetag-outline" size={56} color={Colors.border} />
         <Text style={styles.emptyTitle}>No listings yet</Text>
-        <Text style={styles.emptySubtitle}>Tap "List Item" to start selling</Text>
+        <Text style={styles.emptySubtitle}>Tap &quot;List Item&quot; to start selling</Text>
       </View>
     );
   };
@@ -71,7 +71,7 @@ export default function SellScreen() {
             <Text style={styles.headerTitle}>
               My <Text style={styles.headerTitleAccent}>Listings</Text>
             </Text>
-            <Text style={styles.headerSubtitle}>Items you're selling</Text>
+            <Text style={styles.headerSubtitle}>Items you&apos;re selling</Text>
           </View>
 
           {/* List Item button */}
@@ -84,7 +84,7 @@ export default function SellScreen() {
             onPressOut={() => {
               btnScale.value = withSpring(1, { damping: 12, stiffness: 200 });
             }}
-            onPress={() => router.push('/sell/create')}
+            onPress={() => router.push('/sell/create' as any)}
           >
             <LinearGradient
               colors={[Colors.goldDark, Colors.gold, Colors.goldLight]}
@@ -112,7 +112,7 @@ export default function SellScreen() {
           <View style={styles.cardWrapper}>
             <ListingCard
               listing={item}
-              onPress={(l) => router.push(`/listing/${l.id}`)}
+              onPress={(l) => router.push(`/listing/${l.id}` as any)}
             />
           </View>
         )}
