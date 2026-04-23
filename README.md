@@ -1,4 +1,21 @@
-# Spartan Marketplace
+## 🛒 Spartan Marketplace
+
+A mobile SJSU marketplace app built for students to list items for sale, browse available items, and complete purchases securely within the school community.
+
+### Key Features
+- 📱 Mobile-first UI with Expo Router
+- ⚡ FastAPI backend with REST APIs
+- 💳 Stripe payment integration
+
+## App Preview
+<p align="center">
+  <img src="..." width="40%" />
+  <img src="..." width="40%" />
+</p>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/80499e7e-b47f-4766-b984-50db49779cc2" width="25%" />
+  <img src="https://github.com/user-attachments/assets/b0ca97ac-c41c-4018-85cd-55fdebe6abc0" width="25%" />
+</p>
 
 Monorepo with a **frontend** (Expo/React Native) app and a **backend** (FastAPI) API.
 
@@ -23,13 +40,12 @@ From the **project root**:
 
    Or with tunnel: `npx expo start --tunnel`
 
-In the output you can open the app in a
+In the output you can open the app in 
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go)
 - Web browser
+- I recommend downloading Expo Go on your phone and scanning the qr code generated after npx expo start
 
 Edit the app in **`frontend/app/`** (and **`frontend/components/`**, **`frontend/hooks/`**, etc.). The project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
@@ -76,17 +92,3 @@ To reset the frontend to a blank app (starter code moved to `frontend/app-exampl
 ```bash
 npm run reset-project
 ```
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
