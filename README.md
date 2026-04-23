@@ -39,13 +39,35 @@ See [backend/README.md](backend/README.md). From the project root:
 
 ```bash
 cd backend
-python -m venv .venv
+python -m venv .venv    # Or python3 if python doesn't work
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 API: http://localhost:8000 · Docs: http://localhost:8000/docs
+
+## Stripe Setup (optional — for real payments)
+
+The app includes a mock payment flow for demos. To enable real Stripe payments instead:
+
+1. Create a free [Stripe account](https://dashboard.stripe.com/register)
+2. Go to **Developers → API keys** in the Stripe dashboard (make sure you're in **Test mode** — toggle in the top right)
+3. Copy your **Secret key** (`sk_test_...`) and **Publishable key** (`pk_test_...`)
+4. Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) to receive webhooks locally:
+   ```bash
+   brew install stripe/stripe-cli/stripe   # macOS
+   stripe login
+   stripe listen --forward-to localhost:8000/webhooks/stripe
+   ```
+   The CLI will print a webhook signing secret (`whsec_...`) — copy it.
+5. Add your keys to `backend/.env`:
+   ```
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_PUBLISHABLE_KEY=pk_test_...
+   ```
+6. Use Stripe's test card number `4242 4242 4242 4242` with any future expiry date and any CVC to complete test purchases.
 
 ## Get a fresh frontend
 
