@@ -8,6 +8,7 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'screenshot.mjs', 'backend/.venv/**'],
   },
   {
+    files: ['.expo/types/**/*.d.ts'],
     rules: {
       'import/no-unresolved': 'off',
     },
