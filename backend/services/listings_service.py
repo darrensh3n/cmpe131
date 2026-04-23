@@ -44,7 +44,7 @@ def get_listing_by_id(listing_id: str) -> dict[str, Any] | None:
     return _listings.get(listing_id)
 
 def update_listing(listing_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
-    listing = _listing.get(listing_id)
+    listing = _listings.get(listing_id)
     if listing is None:
         return None
     
@@ -56,5 +56,5 @@ def delete_listing(listing_id: str) -> dict[str, Any] | None:
     if listing is None:
         return None
     
-    listing["status"] == "removed"
+    listing["status"] = "removed"
     return listing

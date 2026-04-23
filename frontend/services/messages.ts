@@ -31,7 +31,7 @@ const SEED_CONVERSATIONS: Conversation[] = [
     id: 'conv-seed-1',
     listingId: 'listing-2',
     listingTitle: 'TI-84 Plus CE Graphing Calculator',
-    listingImageUrl: 'https://placehold.co/80x80',
+    listingImageUrl: 'https://images.unsplash.com/photo-1564466809058-bf4114d55352?w=160&h=160&fit=crop',
     buyerEmail: 'YOU',          // replaced at read-time with logged-in user
     buyerName: 'You',
     sellerEmail: 'alex.kim@sjsu.edu',
@@ -44,7 +44,7 @@ const SEED_CONVERSATIONS: Conversation[] = [
     id: 'conv-seed-2',
     listingId: 'listing-4',
     listingTitle: 'Nike Dri-FIT Hoodie',
-    listingImageUrl: 'https://placehold.co/80x80',
+    listingImageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=160&h=160&fit=crop',
     buyerEmail: 'jordan.lee@sjsu.edu',
     buyerName: 'Jordan Lee',
     sellerEmail: 'YOU',         // replaced at read-time with logged-in user
