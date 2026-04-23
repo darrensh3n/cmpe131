@@ -8,10 +8,7 @@ A mobile SJSU marketplace app built for students to list items for sale, browse 
 - 💳 Stripe payment integration
 
 ## App Preview
-<p align="center">
-  <img src="..." width="40%" />
-  <img src="..." width="40%" />
-</p>
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/80499e7e-b47f-4766-b984-50db49779cc2" width="25%" />
   <img src="https://github.com/user-attachments/assets/b0ca97ac-c41c-4018-85cd-55fdebe6abc0" width="25%" />
