@@ -17,6 +17,14 @@ class CreateListingRequest(BaseModel):
     seller_id: str | None = None
 
 
+class UpdateListingRequest(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    price_cents: int | None = None
+    category: str | None = None
+    image_url: str | None = None
+    image_urls: list[str] | None = None
+
 @router.post("", status_code=201)
 def create_listing(body: CreateListingRequest):
     listing = listings_service.create_listing(
@@ -42,3 +50,20 @@ def get_listing(listing_id: str):
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing not found")
     return listing
+
+@router.patch("/{listing_id}")
+def update_listing(listing_id: str, body: UpdateListingRequest):
+    updated = listings_service.update_listing(
+        listing_id = listing_id,
+        updates = body.model_dump(exclude_unset=True))
+    if updated is None:
+        raise HTTPException(status_code=404, detail = "Listing is not found")
+    return updated
+
+@router.delete("/{listing_id}")
+def delete_listing(listing_id: str):
+    deleted = listings_service.delete_listing(listing_id)
+    if deleted is None:
+        raise HTTPException(status_code=404, detail = "Listing not found")
+    return {"message" : "Listing removed"}
+    
