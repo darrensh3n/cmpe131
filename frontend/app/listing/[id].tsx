@@ -25,7 +25,6 @@ import Animated, {
 import { Colors, Radius, Shadow, Spacing } from '@/constants/theme';
 import { Listing, getListingById } from '@/services/listings';
 import { getOrCreateConversation } from '@/services/messages';
-import { openCheckout } from '@/services/payments';
 import { useAuth } from '@/context/auth';
 import { useWishlist } from '@/context/wishlist';
 
@@ -41,7 +40,6 @@ export default function ListingDetailScreen() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [buying, setBuying] = useState(false);
 
   // Button press animation
   const btnScale = useSharedValue(1);
@@ -236,34 +234,15 @@ export default function ListingDetailScreen() {
           </AnimatedTouchable>
 
           <TouchableOpacity
-            style={[styles.buyBtn, buying && styles.buyBtnDisabled]}
+            style={styles.buyBtn}
             activeOpacity={0.8}
-            disabled={buying}
-            onPress={async () => {
-              if (!userEmail || !listing) return;
-              setBuying(true);
-              try {
-                await openCheckout({
-                  amountCents: Math.round(listing.price * 100),
-                  description: listing.title,
-                  listingId: listing.id,
-                  buyerEmail: userEmail,
-                });
-              } catch {
-                // Silently handle — user can retry
-              } finally {
-                setBuying(false);
-              }
+            onPress={() => {
+              if (!listing) return;
+              router.push(`/checkout/${listing.id}` as any);
             }}
           >
-            {buying ? (
-              <ActivityIndicator size="small" color={Colors.white} />
-            ) : (
-              <>
-                <Ionicons name="card-outline" size={18} color={Colors.white} />
-                <Text style={styles.buyBtnText}>Buy Now</Text>
-              </>
-            )}
+            <Ionicons name="card-outline" size={18} color={Colors.white} />
+            <Text style={styles.buyBtnText}>Buy Now</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -469,9 +448,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
     ...Shadow.button,
-  },
-  buyBtnDisabled: {
-    opacity: 0.6,
   },
   buyBtnText: {
     fontSize: 16,
