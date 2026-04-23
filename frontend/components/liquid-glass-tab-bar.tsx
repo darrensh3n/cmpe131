@@ -32,6 +32,7 @@ const ICONS: Record<string, { active: string; inactive: string }> = {
   messages: { active: 'chatbubble', inactive: 'chatbubble-outline' },
   sell: { active: 'pricetag', inactive: 'pricetag-outline' },
   wishlist: { active: 'heart', inactive: 'heart-outline' },
+  profile: { active: 'person', inactive: 'person-outline' },
 };
 
 export function LiquidGlassTabBar({ state, descriptors, navigation }: Props) {
