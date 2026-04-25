@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -25,7 +25,10 @@ export default function LoginScreen() {
   const { signIn, userEmail } = useAuth();
 
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [highlightField, setHighlightField] = useState<"email" | "password" | null>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (userEmail) {
@@ -54,9 +57,16 @@ export default function LoginScreen() {
   function handleLogin() {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed.endsWith("@sjsu.edu")) {
+      setHighlightField("email");
       setError("Please use your SJSU email address (@sjsu.edu).");
       return;
     }
+    if (!password.trim()) {
+      setHighlightField("password");
+      setError("Please enter your password.");
+      return;
+    }
+    setHighlightField(null);
     setError("");
     signIn(trimmed);
   }
@@ -115,13 +125,16 @@ export default function LoginScreen() {
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle}>Sign In</Text>
           <Text style={styles.cardSubtitle}>
-            Use your SJSU email to get started
+            Use your SJSU email and password to get started
           </Text>
 
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>SJSU Email</Text>
             <TextInput
-              style={[styles.input, error ? styles.inputError : null]}
+              style={[
+                styles.input,
+                highlightField === "email" ? styles.inputError : null,
+              ]}
               placeholder="yourname@sjsu.edu"
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
@@ -130,10 +143,41 @@ export default function LoginScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                if (error) setError("");
+                if (error) {
+                  setError("");
+                  setHighlightField(null);
+                }
+              }}
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              returnKeyType="next"
+              textContentType="username"
+            />
+          </View>
+
+          <View style={styles.passwordWrapper}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <TextInput
+              ref={passwordRef}
+              style={[
+                styles.input,
+                highlightField === "password" ? styles.inputError : null,
+              ]}
+              placeholder="Enter your password"
+              placeholderTextColor={Colors.textMuted}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (error) {
+                  setError("");
+                  setHighlightField(null);
+                }
               }}
               onSubmitEditing={handleLogin}
               returnKeyType="go"
+              textContentType="password"
             />
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
@@ -295,6 +339,9 @@ const styles = StyleSheet.create({
   // Input
   inputWrapper: {
     marginTop: Spacing.lg,
+  },
+  passwordWrapper: {
+    marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   inputLabel: {
