@@ -48,9 +48,8 @@ export default function ConversationScreen() {
 
   useEffect(() => {
     if (!id || !userEmail) return;
-    const conv = getConversationById(id, userEmail);
-    setConversation(conv);
-    setMessages(getMessages(id, userEmail));
+    getConversationById(id, userEmail).then(setConversation);
+    getMessages(id, userEmail).then(setMessages);
   }, [id, userEmail]);
 
   // Scroll to bottom when messages load or new ones arrive
@@ -60,13 +59,14 @@ export default function ConversationScreen() {
     }
   }, [messages.length]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = inputText.trim();
     if (!trimmed || !id || !userEmail) return;
 
-    sendMessage(id, userEmail, trimmed);
-    setMessages(getMessages(id, userEmail));
     setInputText('');
+    await sendMessage(id, userEmail, trimmed);
+    const updated = await getMessages(id, userEmail);
+    setMessages(updated);
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
   };
 

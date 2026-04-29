@@ -1,4 +1,5 @@
-// ─── Types ───────────────────────────────────────────────────────────────────
+import type { DbConversation, DbMessage } from '@/lib/database.types';
+import { supabase } from '@/lib/supabase';
 
 export type Conversation = {
   id: string;
@@ -10,8 +11,8 @@ export type Conversation = {
   sellerEmail: string;
   sellerName: string;
   lastMessage: string;
-  lastMessageAt: string; // ISO 8601
-  unreadCount: number;   // unread for the currently logged-in user
+  lastMessageAt: string;
+  unreadCount: number;
 };
 
 export type Message = {
@@ -19,153 +20,58 @@ export type Message = {
   conversationId: string;
   senderEmail: string;
   text: string;
-  sentAt: string; // ISO 8601
+  sentAt: string;
 };
 
-// ─── Seed Data ───────────────────────────────────────────────────────────────
-// These two conversations are always shown so the UI has something to display.
-// TODO (backend): replace with GET /conversations?userEmail=...
-
-const SEED_CONVERSATIONS: Conversation[] = [
-  {
-    id: 'conv-seed-1',
-    listingId: 'listing-2',
-    listingTitle: 'TI-84 Plus CE Graphing Calculator',
-    listingImageUrl: 'https://images.unsplash.com/photo-1564466809058-bf4114d55352?w=160&h=160&fit=crop',
-    buyerEmail: 'YOU',          // replaced at read-time with logged-in user
-    buyerName: 'You',
-    sellerEmail: 'alex.kim@sjsu.edu',
-    sellerName: 'Alex Kim',
-    lastMessage: 'Is this still available?',
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 14).toISOString(), // 14 min ago
-    unreadCount: 0,
-  },
-  {
-    id: 'conv-seed-2',
-    listingId: 'listing-4',
-    listingTitle: 'Nike Dri-FIT Hoodie',
-    listingImageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=160&h=160&fit=crop',
-    buyerEmail: 'jordan.lee@sjsu.edu',
-    buyerName: 'Jordan Lee',
-    sellerEmail: 'YOU',         // replaced at read-time with logged-in user
-    sellerName: 'You',
-    lastMessage: 'Can you do $20?',
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3 hrs ago
-    unreadCount: 1,
-  },
-];
-
-const SEED_MESSAGES: Record<string, Message[]> = {
-  'conv-seed-1': [
-    {
-      id: 'msg-s1-1',
-      conversationId: 'conv-seed-1',
-      senderEmail: 'YOU',
-      text: 'Hey, is the TI-84 still available?',
-      sentAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-    },
-    {
-      id: 'msg-s1-2',
-      conversationId: 'conv-seed-1',
-      senderEmail: 'alex.kim@sjsu.edu',
-      text: 'Yeah it is! Just used it for finals.',
-      sentAt: new Date(Date.now() - 1000 * 60 * 17).toISOString(),
-    },
-    {
-      id: 'msg-s1-3',
-      conversationId: 'conv-seed-1',
-      senderEmail: 'YOU',
-      text: 'Is this still available?',
-      sentAt: new Date(Date.now() - 1000 * 60 * 14).toISOString(),
-    },
-  ],
-  'conv-seed-2': [
-    {
-      id: 'msg-s2-1',
-      conversationId: 'conv-seed-2',
-      senderEmail: 'jordan.lee@sjsu.edu',
-      text: 'Hi! Is the hoodie still for sale?',
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    },
-    {
-      id: 'msg-s2-2',
-      conversationId: 'conv-seed-2',
-      senderEmail: 'YOU',
-      text: 'Yes! Size medium, barely worn.',
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-    },
-    {
-      id: 'msg-s2-3',
-      conversationId: 'conv-seed-2',
-      senderEmail: 'jordan.lee@sjsu.edu',
-      text: 'Can you do $20?',
-      sentAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    },
-  ],
-};
-
-// ─── In-Memory Store ──────────────────────────────────────────────────────────
-
-let conversations: Conversation[] = [...SEED_CONVERSATIONS];
-let messageStore: Record<string, Message[]> = {
-  'conv-seed-1': [...SEED_MESSAGES['conv-seed-1']],
-  'conv-seed-2': [...SEED_MESSAGES['conv-seed-2']],
-};
-let msgCounter = 100;
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Resolve the "YOU" placeholder in seed data with the real logged-in user email.
- * This keeps seed data visible no matter which SJSU email the user logs in with.
- */
-function resolveConversation(conv: Conversation, userEmail: string): Conversation {
+function toConversation(row: DbConversation): Conversation {
   return {
-    ...conv,
-    buyerEmail: conv.buyerEmail === 'YOU' ? userEmail : conv.buyerEmail,
-    buyerName: conv.buyerName === 'You' ? userEmail.split('@')[0] : conv.buyerName,
-    sellerEmail: conv.sellerEmail === 'YOU' ? userEmail : conv.sellerEmail,
-    sellerName: conv.sellerName === 'You' ? userEmail.split('@')[0] : conv.sellerName,
+    id: row.id,
+    listingId: row.listing_id,
+    listingTitle: row.listing_title,
+    listingImageUrl: row.listing_image_url ?? '',
+    buyerEmail: row.buyer_email,
+    buyerName: row.buyer_name,
+    sellerEmail: row.seller_email,
+    sellerName: row.seller_name,
+    lastMessage: row.last_message,
+    lastMessageAt: row.last_message_at,
+    unreadCount: 0,
   };
 }
 
-function resolveMessages(msgs: Message[], userEmail: string): Message[] {
-  return msgs.map((m) => ({
-    ...m,
-    senderEmail: m.senderEmail === 'YOU' ? userEmail : m.senderEmail,
-  }));
+function toMessage(row: DbMessage): Message {
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    senderEmail: row.sender_email,
+    text: row.text,
+    sentAt: row.sent_at,
+  };
 }
 
-// ─── Service Functions ────────────────────────────────────────────────────────
+export async function getConversations(userEmail: string): Promise<Conversation[]> {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .or(`buyer_email.eq.${userEmail},seller_email.eq.${userEmail}`)
+    .order('last_message_at', { ascending: false });
 
-/**
- * Returns all conversations for the given user, sorted most-recent first.
- * TODO (backend): GET /api/conversations — replace body with fetch call.
- */
-export function getConversations(userEmail: string): Conversation[] {
-  return conversations
-    .map((c) => resolveConversation(c, userEmail))
-    .filter((c) => c.buyerEmail === userEmail || c.sellerEmail === userEmail)
-    .sort(
-      (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
-    );
+  if (error) throw error;
+  return (data as DbConversation[]).map(toConversation);
 }
 
-/**
- * Returns a single conversation by ID, with "YOU" placeholders resolved.
- * TODO (backend): GET /api/conversations/:id
- */
-export function getConversationById(id: string, userEmail: string): Conversation | null {
-  const conv = conversations.find((c) => c.id === id);
-  if (!conv) return null;
-  return resolveConversation(conv, userEmail);
+export async function getConversationById(id: string, _userEmail: string): Promise<Conversation | null> {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) return null;
+  return toConversation(data as DbConversation);
 }
 
-/**
- * Finds an existing conversation for the given listing + buyer, or creates one.
- * TODO (backend): POST /api/conversations — replace body with fetch call.
- */
-export function getOrCreateConversation(
+export async function getOrCreateConversation(
   listingId: string,
   buyerEmail: string,
   buyerName: string,
@@ -173,67 +79,83 @@ export function getOrCreateConversation(
   sellerName: string,
   listingTitle: string,
   listingImageUrl: string
-): Conversation {
-  const existing = conversations.find(
-    (c) => c.listingId === listingId && c.buyerEmail === buyerEmail
-  );
-  if (existing) return existing;
+): Promise<Conversation> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
 
-  const newConvo: Conversation = {
-    id: `conv-${Date.now()}`,
-    listingId,
-    listingTitle,
-    listingImageUrl,
-    buyerEmail,
-    buyerName,
-    sellerEmail,
-    sellerName,
-    lastMessage: '',
-    lastMessageAt: new Date().toISOString(),
-    unreadCount: 0,
-  };
+  // Return existing conversation if one already exists for this listing + buyer
+  const { data: existing } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('listing_id', listingId)
+    .eq('buyer_id', user.id)
+    .maybeSingle();
 
-  conversations = [newConvo, ...conversations];
-  messageStore[newConvo.id] = [];
-  return newConvo;
+  if (existing) return toConversation(existing as DbConversation);
+
+  // Look up seller_id from the listing row
+  const { data: listingRow } = await supabase
+    .from('listings')
+    .select('seller_id')
+    .eq('id', listingId)
+    .single();
+
+  const { data: row, error } = await supabase
+    .from('conversations')
+    .insert({
+      listing_id: listingId,
+      listing_title: listingTitle,
+      listing_image_url: listingImageUrl,
+      buyer_id: user.id,
+      buyer_email: buyerEmail,
+      buyer_name: buyerName,
+      seller_id: listingRow?.seller_id ?? user.id,
+      seller_email: sellerEmail,
+      seller_name: sellerName,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return toConversation(row as DbConversation);
 }
 
-/**
- * Returns all messages for a conversation, oldest first.
- * TODO (backend): GET /api/conversations/:id/messages
- */
-export function getMessages(conversationId: string, userEmail: string): Message[] {
-  const msgs = messageStore[conversationId] ?? [];
-  return resolveMessages(msgs, userEmail).sort(
-    (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
-  );
+export async function getMessages(conversationId: string, _userEmail: string): Promise<Message[]> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('sent_at', { ascending: true });
+
+  if (error) throw error;
+  return (data as DbMessage[]).map(toMessage);
 }
 
-/**
- * Appends a new message to the conversation and updates lastMessage metadata.
- * TODO (backend): POST /api/conversations/:id/messages
- */
-export function sendMessage(
+export async function sendMessage(
   conversationId: string,
   senderEmail: string,
   text: string
-): Message {
-  const msg: Message = {
-    id: `msg-${++msgCounter}`,
-    conversationId,
-    senderEmail,
-    text,
-    sentAt: new Date().toISOString(),
-  };
+): Promise<Message> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
 
-  messageStore[conversationId] = [...(messageStore[conversationId] ?? []), msg];
+  const { data: row, error } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      sender_email: senderEmail,
+      text,
+    })
+    .select()
+    .single();
 
-  // Update conversation metadata
-  conversations = conversations.map((c) =>
-    c.id === conversationId
-      ? { ...c, lastMessage: text, lastMessageAt: msg.sentAt, unreadCount: 0 }
-      : c
-  );
+  if (error) throw error;
 
-  return msg;
+  await supabase
+    .from('conversations')
+    .update({ last_message: text, last_message_at: new Date().toISOString() })
+    .eq('id', conversationId);
+
+  return toMessage(row as DbMessage);
 }

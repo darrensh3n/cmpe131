@@ -88,18 +88,16 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     if (userEmail) {
-      setConversations(getConversations(userEmail));
+      getConversations(userEmail).then(setConversations);
     }
   }, [userEmail]);
 
-  // Refresh list when screen comes back into focus (e.g. after sending a message)
-  // Simple polling alternative since we don't have a focus hook here
   useEffect(() => {
     const interval = setInterval(() => {
       if (userEmail) {
-        setConversations(getConversations(userEmail));
+        getConversations(userEmail).then(setConversations);
       }
-    }, 1500);
+    }, 5000);
     return () => clearInterval(interval);
   }, [userEmail]);
 

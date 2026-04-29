@@ -69,12 +69,12 @@ export default function ProfileScreen() {
     setEmailModalVisible(true);
   }
 
-  function handleSaveEmail() {
+  async function handleSaveEmail() {
     if (!draftEmail.endsWith('@sjsu.edu')) {
       setEmailError('Email must end with @sjsu.edu');
       return;
     }
-    const success = updateEmail(draftEmail.trim().toLowerCase());
+    const success = await updateEmail(draftEmail.trim().toLowerCase());
     if (success) setEmailModalVisible(false);
   }
 

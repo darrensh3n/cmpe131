@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -9,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import Animated, {
@@ -22,8 +24,10 @@ import { useAuth } from "@/context/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn, userEmail } = useAuth();
+  const { signIn, signUp, userEmail } = useAuth();
 
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -54,7 +58,7 @@ export default function LoginScreen() {
     buttonOpacity.value = withSpring(1);
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed.endsWith("@sjsu.edu")) {
       setHighlightField("email");
@@ -66,9 +70,21 @@ export default function LoginScreen() {
       setError("Please enter your password.");
       return;
     }
+    if (isSignUp && password.length < 6) {
+      setHighlightField("password");
+      setError("Password must be at least 6 characters.");
+      return;
+    }
     setHighlightField(null);
     setError("");
-    signIn(trimmed);
+    setIsLoading(true);
+    const errorMsg = isSignUp
+      ? await signUp(trimmed, password)
+      : await signIn(trimmed, password);
+    setIsLoading(false);
+    if (errorMsg) {
+      setError(errorMsg);
+    }
   }
 
   return (
@@ -123,9 +139,11 @@ export default function LoginScreen() {
         />
 
         <View style={styles.cardContent}>
-          <Text style={styles.cardTitle}>Sign In</Text>
+          <Text style={styles.cardTitle}>{isSignUp ? "Create Account" : "Sign In"}</Text>
           <Text style={styles.cardSubtitle}>
-            Use your SJSU email and password to get started
+            {isSignUp
+              ? "Sign up with your SJSU email to join the marketplace"
+              : "Use your SJSU email and password to get started"}
           </Text>
 
           <View style={styles.inputWrapper}>
@@ -187,6 +205,7 @@ export default function LoginScreen() {
             onPress={handleLogin}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
+            disabled={isLoading}
           >
             <Animated.View style={[styles.buttonWrapper, animatedButton]}>
               <LinearGradient
@@ -196,7 +215,10 @@ export default function LoginScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.button}
               >
-                <Text style={styles.buttonText}>Continue →</Text>
+                {isLoading
+                  ? <ActivityIndicator color="#1A0F00" />
+                  : <Text style={styles.buttonText}>{isSignUp ? "Create Account →" : "Continue →"}</Text>
+                }
               </LinearGradient>
             </Animated.View>
           </Pressable>
@@ -204,6 +226,17 @@ export default function LoginScreen() {
           <Text style={styles.disclaimer}>
             Access restricted to SJSU students, faculty, and staff.
           </Text>
+
+          <TouchableOpacity
+            onPress={() => { setIsSignUp(v => !v); setError(""); setHighlightField(null); }}
+            activeOpacity={0.7}
+            style={styles.toggleWrapper}
+          >
+            <Text style={styles.toggleText}>
+              {isSignUp ? "Already have an account? " : "New here? "}
+              <Text style={styles.toggleLink}>{isSignUp ? "Sign In" : "Create account"}</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -405,5 +438,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: Spacing.lg,
     lineHeight: 16,
+  },
+  toggleWrapper: {
+    alignItems: "center",
+    marginTop: Spacing.md,
+  },
+  toggleText: {
+    fontSize: 13,
+    color: Colors.textMuted,
+  },
+  toggleLink: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.blue,
   },
 });

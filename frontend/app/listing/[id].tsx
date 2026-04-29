@@ -215,9 +215,9 @@ export default function ListingDetailScreen() {
             onPressOut={() => {
               btnScale.value = withSpring(1, { damping: 12, stiffness: 200 });
             }}
-            onPress={() => {
+            onPress={async () => {
               if (!userEmail || !listing) return;
-              const convo = getOrCreateConversation(
+              const convo = await getOrCreateConversation(
                 listing.id,
                 userEmail,
                 userEmail.split('@')[0],
