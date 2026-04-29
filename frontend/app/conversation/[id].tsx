@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +17,8 @@ import {
 
 import { useAuth } from '@/context/auth';
 import { Colors, Radius, Shadow, Spacing } from '@/constants/theme';
+import type { DbMessage } from '@/lib/database.types';
+import { supabase } from '@/lib/supabase';
 import {
   Conversation,
   Message,
@@ -52,7 +55,31 @@ export default function ConversationScreen() {
     getMessages(id, userEmail).then(setMessages);
   }, [id, userEmail]);
 
-  // Scroll to bottom when messages load or new ones arrive
+  // Realtime subscription — appends messages from the other participant live
+  useEffect(() => {
+    if (!id || !userEmail) return;
+
+    const channel = supabase
+      .channel(`messages:${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` },
+        (payload) => {
+          const row = payload.new as DbMessage;
+          if (row.sender_email === userEmail) return; // already appended on send
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === row.id)) return prev;
+            return [...prev, { id: row.id, conversationId: row.conversation_id, senderEmail: row.sender_email, text: row.text, sentAt: row.sent_at }];
+          });
+          setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [id, userEmail]);
+
+  // Scroll to bottom when messages first load
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 50);
@@ -64,10 +91,14 @@ export default function ConversationScreen() {
     if (!trimmed || !id || !userEmail) return;
 
     setInputText('');
-    await sendMessage(id, userEmail, trimmed);
-    const updated = await getMessages(id, userEmail);
-    setMessages(updated);
-    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    try {
+      const sent = await sendMessage(id, userEmail, trimmed);
+      setMessages((prev) => [...prev, sent]);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    } catch {
+      setInputText(trimmed); // restore text so user can retry
+      Alert.alert('Failed to send', 'Your message could not be sent. Please try again.');
+    }
   };
 
   if (!conversation) {

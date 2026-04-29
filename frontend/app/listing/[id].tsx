@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -217,16 +218,20 @@ export default function ListingDetailScreen() {
             }}
             onPress={async () => {
               if (!userEmail || !listing) return;
-              const convo = await getOrCreateConversation(
-                listing.id,
-                userEmail,
-                userEmail.split('@')[0],
-                listing.sellerEmail,
-                listing.sellerName,
-                listing.title,
-                listing.imageUrls[0] ?? ''
-              );
-              router.push(`/conversation/${convo.id}` as any);
+              try {
+                const convo = await getOrCreateConversation(
+                  listing.id,
+                  userEmail,
+                  userEmail.split('@')[0],
+                  listing.sellerEmail,
+                  listing.sellerName,
+                  listing.title,
+                  listing.imageUrls[0] ?? ''
+                );
+                router.push(`/conversation/${convo.id}` as any);
+              } catch {
+                Alert.alert('Could not open conversation', 'Please try again.');
+              }
             }}
           >
             <Ionicons name="mail-outline" size={18} color={Colors.white} />

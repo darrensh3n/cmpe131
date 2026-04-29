@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -37,6 +38,7 @@ export default function CreateListingScreen() {
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [errors, setErrors] = useState<{ title?: string; price?: string; images?: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitScale = useSharedValue(1);
   const submitStyle = useAnimatedStyle(() => ({
@@ -70,18 +72,25 @@ export default function CreateListingScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validate() || !userEmail) return;
-    createListing({
-      title: title.trim(),
-      description: description.trim(),
-      price: parseFloat(price),
-      category,
-      imageUrls: imageUris,
-      sellerName: userEmail.split('@')[0],
-      sellerEmail: userEmail,
-    });
-    router.back();
+  const handleSubmit = async () => {
+    if (!validate() || !userEmail || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await createListing({
+        title: title.trim(),
+        description: description.trim(),
+        price: parseFloat(price),
+        category,
+        imageUrls: imageUris,
+        sellerName: userEmail.split('@')[0],
+        sellerEmail: userEmail,
+      });
+      router.back();
+    } catch {
+      Alert.alert('Failed to post listing', 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -248,8 +257,9 @@ export default function CreateListingScreen() {
         {/* Submit button */}
         <View style={styles.footer}>
           <AnimatedTouchable
-            style={[styles.submitBtn, submitStyle]}
+            style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled, submitStyle]}
             activeOpacity={1}
+            disabled={isSubmitting}
             onPressIn={() => {
               submitScale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
             }}
@@ -259,7 +269,7 @@ export default function CreateListingScreen() {
             onPress={handleSubmit}
           >
             <Ionicons name="pricetag-outline" size={18} color={Colors.white} />
-            <Text style={styles.submitBtnText}>List Item</Text>
+            <Text style={styles.submitBtnText}>{isSubmitting ? 'Posting…' : 'List Item'}</Text>
           </AnimatedTouchable>
         </View>
       </KeyboardAvoidingView>
@@ -472,5 +482,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.white,
     letterSpacing: 0.3,
+  },
+  submitBtnDisabled: {
+    opacity: 0.6,
   },
 });

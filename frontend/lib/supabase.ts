@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
 
@@ -10,6 +11,11 @@ const CHUNK_SIZE = 1900;
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      // SSR (Node.js) has no localStorage — return null so Supabase starts unauthenticated
+      if (typeof localStorage === 'undefined') return null;
+      return localStorage.getItem(key);
+    }
     const countStr = await SecureStore.getItemAsync(`${key}__chunks`);
     if (!countStr) return SecureStore.getItemAsync(key);
     const count = parseInt(countStr, 10);
@@ -22,6 +28,11 @@ const storage = {
     return value;
   },
   async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(key, value);
+      return;
+    }
     const count = Math.ceil(value.length / CHUNK_SIZE);
     await SecureStore.setItemAsync(`${key}__chunks`, String(count));
     for (let i = 0; i < count; i++) {
@@ -32,6 +43,11 @@ const storage = {
     }
   },
   async removeItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.removeItem(key);
+      return;
+    }
     const countStr = await SecureStore.getItemAsync(`${key}__chunks`);
     if (countStr) {
       const count = parseInt(countStr, 10);

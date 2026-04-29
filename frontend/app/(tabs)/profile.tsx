@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -33,6 +34,7 @@ export default function ProfileScreen() {
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [draftEmail, setDraftEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const signOutScale = useSharedValue(1);
   const signOutStyle = useAnimatedStyle(() => ({
@@ -59,7 +61,14 @@ export default function ProfileScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      updateProfilePicture(result.assets[0].uri);
+      try {
+        setIsUploading(true);
+        await updateProfilePicture(result.assets[0].uri);
+      } catch {
+        Alert.alert('Upload failed', 'Could not save your profile picture. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
     }
   }
 
@@ -109,7 +118,7 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         {/* Avatar card */}
         <View style={styles.card}>
-          <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85} disabled={isUploading}>
             {profilePicture ? (
               <Image source={{ uri: profilePicture }} style={styles.avatarImage} />
             ) : (
@@ -118,7 +127,9 @@ export default function ProfileScreen() {
               </View>
             )}
             <View style={styles.avatarBadge}>
-              <Ionicons name="camera" size={14} color={Colors.white} />
+              {isUploading
+                ? <ActivityIndicator size="small" color={Colors.white} />
+                : <Ionicons name="camera" size={14} color={Colors.white} />}
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handlePickImage} activeOpacity={0.7}>
