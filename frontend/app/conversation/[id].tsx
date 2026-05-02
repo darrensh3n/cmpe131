@@ -24,6 +24,7 @@ import {
   Message,
   getConversationById,
   getMessages,
+  markConversationRead,
   sendMessage,
 } from '@/services/messages';
 
@@ -53,6 +54,7 @@ export default function ConversationScreen() {
     if (!id || !userEmail) return;
     getConversationById(id, userEmail).then(setConversation);
     getMessages(id, userEmail).then(setMessages);
+    markConversationRead(id, userEmail);
   }, [id, userEmail]);
 
   // Realtime subscription — appends messages from the other participant live

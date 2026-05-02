@@ -28,6 +28,8 @@ export type DbConversation = {
   seller_name: string;
   last_message: string;
   last_message_at: string;
+  buyer_last_read_at: string | null;
+  seller_last_read_at: string | null;
   created_at: string;
 };
 

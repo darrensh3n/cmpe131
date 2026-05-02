@@ -30,7 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const email = session.user.email ?? '';
+        const provider = session.user.app_metadata?.provider;
+        if (provider === 'google' && !email.endsWith('@sjsu.edu')) {
+          await supabase.auth.signOut();
+          return;
+        }
+      }
       setUser(session?.user ?? null);
     });
 

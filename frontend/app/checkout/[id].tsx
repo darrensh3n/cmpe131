@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 
 import { Colors, Radius, Shadow, Spacing } from '@/constants/theme';
+import { useAuth } from '@/context/auth';
 import { getListingById, Listing } from '@/services/listings';
 
 type Stage = 'form' | 'processing' | 'success' | 'meetup';
@@ -35,9 +36,13 @@ const TIME_SLOTS = [
 
 export default function CheckoutScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { userEmail } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [stage, setStage] = useState<Stage>('form');
   const [payMethod, setPayMethod] = useState<'card' | 'in-person'>('card');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvc, setCvc] = useState('');
   const [selectedSpot, setSelectedSpot] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
@@ -58,6 +63,27 @@ export default function CheckoutScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.blue} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (userEmail === listing.sellerEmail) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Checkout</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={styles.center}>
+          <Ionicons name="alert-circle-outline" size={48} color={Colors.textMuted} />
+          <Text style={styles.ownListingTitle}>You can't buy your own listing</Text>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <Text style={styles.ownListingBack}>Go back</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -286,25 +312,61 @@ export default function CheckoutScreen() {
         {/* Card details (only for card payment) */}
         {payMethod === 'card' && (
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Card Details</Text>
+            <View style={styles.cardLabelRow}>
+              <Text style={styles.sectionLabel}>Card Details</Text>
+              <View style={styles.demoBadge}>
+                <Text style={styles.demoBadgeText}>BETA</Text>
+              </View>
+            </View>
 
             <Text style={styles.fieldLabel}>Card Number</Text>
             <View style={styles.inputRow}>
               <Ionicons name="card-outline" size={18} color={Colors.textMuted} />
-              <TextInput style={styles.input} value="4242 4242 4242 4242" editable={false} />
+              <TextInput
+                style={styles.input}
+                value={cardNumber}
+                onChangeText={(t) => {
+                  const digits = t.replace(/\D/g, '').slice(0, 16);
+                  setCardNumber(digits.replace(/(.{4})/g, '$1 ').trim());
+                }}
+                placeholder="1234 5678 9012 3456"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="number-pad"
+                maxLength={19}
+              />
             </View>
 
             <View style={styles.rowSplit}>
               <View style={styles.halfField}>
                 <Text style={styles.fieldLabel}>Expiry</Text>
                 <View style={styles.inputRow}>
-                  <TextInput style={styles.input} value="12/28" editable={false} />
+                  <TextInput
+                    style={styles.input}
+                    value={expiry}
+                    onChangeText={(t) => {
+                      const digits = t.replace(/\D/g, '').slice(0, 4);
+                      setExpiry(digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
+                    }}
+                    placeholder="MM/YY"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="number-pad"
+                    maxLength={5}
+                  />
                 </View>
               </View>
               <View style={styles.halfField}>
                 <Text style={styles.fieldLabel}>CVC</Text>
                 <View style={styles.inputRow}>
-                  <TextInput style={styles.input} value="123" editable={false} />
+                  <TextInput
+                    style={styles.input}
+                    value={cvc}
+                    onChangeText={(t) => setCvc(t.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="123"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    secureTextEntry
+                  />
                 </View>
               </View>
             </View>
@@ -582,6 +644,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textSecondary,
     marginTop: Spacing.sm,
+  },
+  cardLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
+  demoBadge: {
+    backgroundColor: Colors.goldLight,
+    borderRadius: Radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  demoBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.white,
+    letterSpacing: 0.8,
+  },
+  ownListingTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  ownListingBack: {
+    fontSize: 15,
+    color: Colors.blue,
+    fontWeight: '600',
   },
   // Meetup
   meetupSellerRow: {

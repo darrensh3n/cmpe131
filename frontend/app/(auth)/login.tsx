@@ -6,7 +6,6 @@ import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -54,6 +53,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (userEmail) {
+      WebBrowser.dismissBrowser();
       router.replace("/(tabs)");
     }
   }, [router, userEmail]);
@@ -184,36 +184,13 @@ export default function LoginScreen() {
         return;
       }
 
-      Alert.alert(
-        "Debug",
-        `redirectTo: ${redirectTo}\n\nOAuth URL: ${data.url.slice(0, 120)}…`,
-      );
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectTo,
-      );
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
-      if (result.type === "cancel") return;
-      if (result.type !== "success") {
-        setError("Google sign-in failed. Please try again.");
-        return;
-      }
+      if (result.type !== "success") return;
 
       const { error: exchangeError } =
         await supabase.auth.exchangeCodeForSession(result.url);
-      if (exchangeError) {
-        setError(exchangeError.message);
-        return;
-      }
-
-      // Enforce @sjsu.edu domain
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user?.email?.endsWith("@sjsu.edu")) {
-        await supabase.auth.signOut();
-        setError("Only @sjsu.edu Google accounts are permitted.");
-      }
+      if (exchangeError) setError(exchangeError.message);
     } finally {
       setIsGoogleLoading(false);
     }

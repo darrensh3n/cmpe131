@@ -57,7 +57,46 @@ export async function getConversations(userEmail: string): Promise<Conversation[
     .order('last_message_at', { ascending: false });
 
   if (error) throw error;
-  return (data as DbConversation[]).map(toConversation);
+  const rows = data as DbConversation[];
+  if (rows.length === 0) return [];
+
+  // Batch-fetch messages from the other party across all conversations
+  const ids = rows.map(r => r.id);
+  const { data: msgs } = await supabase
+    .from('messages')
+    .select('conversation_id, sent_at')
+    .in('conversation_id', ids)
+    .neq('sender_email', userEmail);
+
+  const msgsByConvo: Record<string, string[]> = {};
+  for (const m of (msgs ?? [])) {
+    (msgsByConvo[m.conversation_id] ??= []).push(m.sent_at);
+  }
+
+  return rows.map(row => {
+    const isUserBuyer = row.buyer_email === userEmail;
+    const lastReadAt = isUserBuyer ? row.buyer_last_read_at : row.seller_last_read_at;
+    const sentAts = msgsByConvo[row.id] ?? [];
+    const unreadCount = lastReadAt
+      ? sentAts.filter(t => t > lastReadAt).length
+      : sentAts.length;
+    return { ...toConversation(row), unreadCount };
+  });
+}
+
+export async function markConversationRead(conversationId: string, userEmail: string): Promise<void> {
+  const { data: convo } = await supabase
+    .from('conversations')
+    .select('buyer_email')
+    .eq('id', conversationId)
+    .single();
+
+  if (!convo) return;
+  const field = convo.buyer_email === userEmail ? 'buyer_last_read_at' : 'seller_last_read_at';
+  await supabase
+    .from('conversations')
+    .update({ [field]: new Date().toISOString() })
+    .eq('id', conversationId);
 }
 
 export async function getConversationById(id: string, _userEmail: string): Promise<Conversation | null> {

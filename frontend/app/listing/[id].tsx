@@ -206,50 +206,57 @@ export default function ListingDetailScreen() {
 
       {/* Footer buttons */}
       <View style={styles.footer}>
-        <View style={styles.footerRow}>
-          <AnimatedTouchable
-            style={[styles.contactBtn, styles.contactBtnHalf, btnStyle]}
-            activeOpacity={1}
-            onPressIn={() => {
-              btnScale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
-            }}
-            onPressOut={() => {
-              btnScale.value = withSpring(1, { damping: 12, stiffness: 200 });
-            }}
-            onPress={async () => {
-              if (!userEmail || !listing) return;
-              try {
-                const convo = await getOrCreateConversation(
-                  listing.id,
-                  userEmail,
-                  userEmail.split('@')[0],
-                  listing.sellerEmail,
-                  listing.sellerName,
-                  listing.title,
-                  listing.imageUrls[0] ?? ''
-                );
-                router.push(`/conversation/${convo.id}` as any);
-              } catch {
-                Alert.alert('Could not open conversation', 'Please try again.');
-              }
-            }}
-          >
-            <Ionicons name="mail-outline" size={18} color={Colors.white} />
-            <Text style={styles.contactBtnText}>Contact</Text>
-          </AnimatedTouchable>
+        {userEmail === listing.sellerEmail ? (
+          <View style={styles.ownerBanner}>
+            <Ionicons name="person-circle-outline" size={18} color={Colors.textMuted} />
+            <Text style={styles.ownerBannerText}>You posted this listing</Text>
+          </View>
+        ) : (
+          <View style={styles.footerRow}>
+            <AnimatedTouchable
+              style={[styles.contactBtn, styles.contactBtnHalf, btnStyle]}
+              activeOpacity={1}
+              onPressIn={() => {
+                btnScale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
+              }}
+              onPressOut={() => {
+                btnScale.value = withSpring(1, { damping: 12, stiffness: 200 });
+              }}
+              onPress={async () => {
+                if (!userEmail || !listing) return;
+                try {
+                  const convo = await getOrCreateConversation(
+                    listing.id,
+                    userEmail,
+                    userEmail.split('@')[0],
+                    listing.sellerEmail,
+                    listing.sellerName,
+                    listing.title,
+                    listing.imageUrls[0] ?? ''
+                  );
+                  router.push(`/conversation/${convo.id}` as any);
+                } catch {
+                  Alert.alert('Could not open conversation', 'Please try again.');
+                }
+              }}
+            >
+              <Ionicons name="mail-outline" size={18} color={Colors.white} />
+              <Text style={styles.contactBtnText}>Contact</Text>
+            </AnimatedTouchable>
 
-          <TouchableOpacity
-            style={styles.buyBtn}
-            activeOpacity={0.8}
-            onPress={() => {
-              if (!listing) return;
-              router.push(`/checkout/${listing.id}` as any);
-            }}
-          >
-            <Ionicons name="card-outline" size={18} color={Colors.white} />
-            <Text style={styles.buyBtnText}>Buy Now</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.buyBtn}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (!listing) return;
+                router.push(`/checkout/${listing.id}` as any);
+              }}
+            >
+              <Ionicons name="card-outline" size={18} color={Colors.white} />
+              <Text style={styles.buyBtnText}>Buy Now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -478,5 +485,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.blue,
     fontWeight: '600',
+  },
+  ownerBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    height: 52,
+  },
+  ownerBannerText: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    fontWeight: '500',
   },
 });
