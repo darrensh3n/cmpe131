@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
   Platform,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -30,6 +31,7 @@ import { CATEGORIES, Listing, getListings } from '@/services/listings';
 export default function MarketplaceScreen() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -40,10 +42,21 @@ export default function MarketplaceScreen() {
   const searchOpacity = useSharedValue(0);
   const searchTranslateY = useSharedValue(-8);
 
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      getListings().then((data) => {
+        setListings(data);
+        setLoading(false);
+      });
+    }, [])
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     getListings().then((data) => {
       setListings(data);
-      setLoading(false);
+      setRefreshing(false);
     });
   }, []);
 
@@ -208,6 +221,9 @@ export default function MarketplaceScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           columnWrapperStyle={styles.columnWrapper}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.blue} />
+          }
         />
       )}
     </SafeAreaView>

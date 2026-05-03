@@ -24,7 +24,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Colors, Radius, Shadow, Spacing } from '@/constants/theme';
-import { Listing, getListingById } from '@/services/listings';
+import { Listing, deleteListing, getListingById } from '@/services/listings';
 import { getOrCreateConversation } from '@/services/messages';
 import { useAuth } from '@/context/auth';
 import { useWishlist } from '@/context/wishlist';
@@ -208,8 +208,39 @@ export default function ListingDetailScreen() {
       <View style={styles.footer}>
         {userEmail === listing.sellerEmail ? (
           <View style={styles.ownerBanner}>
-            <Ionicons name="person-circle-outline" size={18} color={Colors.textMuted} />
-            <Text style={styles.ownerBannerText}>You posted this listing</Text>
+            <View style={styles.ownerBannerLeft}>
+              <Ionicons name="person-circle-outline" size={18} color={Colors.textMuted} />
+              <Text style={styles.ownerBannerText}>Your listing</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              activeOpacity={0.8}
+              onPress={() =>
+                Alert.alert(
+                  'Delete Listing',
+                  'Are you sure you want to delete this listing? This cannot be undone.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          await deleteListing(listing.id);
+                          router.back();
+                        } catch (err) {
+                          const msg = err instanceof Error ? err.message : JSON.stringify(err);
+                          Alert.alert('Error', msg);
+                        }
+                      },
+                    },
+                  ]
+                )
+              }
+            >
+              <Ionicons name="trash-outline" size={16} color={Colors.error} />
+              <Text style={styles.deleteBtnText}>Delete</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.footerRow}>
@@ -489,13 +520,32 @@ const styles = StyleSheet.create({
   ownerBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    justifyContent: 'space-between',
     height: 52,
   },
   ownerBannerText: {
     fontSize: 15,
     color: Colors.textMuted,
     fontWeight: '500',
+  },
+  ownerBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  deleteBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.error,
   },
 });

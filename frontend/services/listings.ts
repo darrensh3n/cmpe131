@@ -86,5 +86,14 @@ export async function createListing(
   return toApp(row as DbListing);
 }
 
+export async function deleteListing(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('listings')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
 export const CATEGORIES = ['All', 'Textbooks', 'Electronics', 'Furniture', 'Clothing', 'Other'];
 export const SELL_CATEGORIES = ['Textbooks', 'Electronics', 'Furniture', 'Clothing', 'Other'];

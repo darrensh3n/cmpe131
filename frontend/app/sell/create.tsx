@@ -24,6 +24,7 @@ import Animated, {
 
 import { Colors, Radius, Shadow, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
+import { supabase } from '@/lib/supabase';
 import { SELL_CATEGORIES, createListing } from '@/services/listings';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
@@ -76,18 +77,43 @@ export default function CreateListingScreen() {
     if (!validate() || !userEmail || isSubmitting) return;
     try {
       setIsSubmitting(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Upload each image to Supabase Storage and collect public URLs
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < imageUris.length; i++) {
+        const arraybuffer = await fetch(imageUris[i]).then(res => res.arrayBuffer());
+        const filePath = `${user.id}/${Date.now()}-${i}.jpg`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('listings')
+          .upload(filePath, arraybuffer, { contentType: 'image/jpeg', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('listings')
+          .getPublicUrl(filePath);
+
+        console.log('Uploaded image URL:', publicUrl);
+        uploadedUrls.push(publicUrl);
+      }
+
       await createListing({
         title: title.trim(),
         description: description.trim(),
         price: parseFloat(price),
         category,
-        imageUrls: imageUris,
+        imageUrls: uploadedUrls,
         sellerName: userEmail.split('@')[0],
         sellerEmail: userEmail,
       });
       router.back();
-    } catch {
-      Alert.alert('Failed to post listing', 'Something went wrong. Please try again.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      Alert.alert('Failed to post listing', msg);
     } finally {
       setIsSubmitting(false);
     }
